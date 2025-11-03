@@ -1,0 +1,164 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Modern admin dashboard color palette */
+    --background: 220 20% 98%;
+    --foreground: 220 20% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 15%;
+
+    --primary: 270 95% 75%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 20% 96%;
+    --secondary-foreground: 220 20% 15%;
+
+    --muted: 220 20% 95%;
+    --muted-foreground: 220 10% 50%;
+
+    --accent: 270 95% 88%;
+    --accent-foreground: 270 95% 25%;
+
+    --destructive: 0 85% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 94%;
+    --ring: 270 95% 75%;
+
+    --radius: 0.75rem;
+
+    /* Glassmorphism variables */
+    --glass-bg: 255 255 255 / 0.08;
+    --glass-border: 255 255 255 / 0.2;
+    --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(270 95% 75%), hsl(280 95% 85%));
+    --gradient-secondary: linear-gradient(135deg, hsl(220 20% 98%), hsl(220 20% 95%));
+    --gradient-accent: linear-gradient(135deg, hsl(270 95% 88%), hsl(260 90% 92%));
+    --gradient-dark: linear-gradient(135deg, hsl(220 30% 10%), hsl(220 30% 20%));
+
+    --sidebar-background: 220 30% 12%;
+    --sidebar-foreground: 220 20% 95%;
+    --sidebar-primary: 270 95% 75%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 30% 18%;
+    --sidebar-accent-foreground: 220 20% 95%;
+    --sidebar-border: 220 30% 25%;
+    --sidebar-ring: 270 95% 75%;
+  }
+
+  .dark {
+    --background: 220 30% 8%;
+    --foreground: 220 20% 95%;
+
+    --card: 220 30% 12%;
+    --card-foreground: 220 20% 95%;
+
+    --popover: 220 30% 12%;
+    --popover-foreground: 220 20% 95%;
+
+    --primary: 270 95% 75%;
+    --primary-foreground: 220 30% 8%;
+
+    --secondary: 220 30% 15%;
+    --secondary-foreground: 220 20% 95%;
+
+    --muted: 220 30% 15%;
+    --muted-foreground: 220 10% 60%;
+
+    --accent: 270 95% 88%;
+    --accent-foreground: 220 30% 8%;
+
+    --destructive: 0 85% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 220 30% 25%;
+    --input: 220 30% 18%;
+    --ring: 270 95% 75%;
+
+    --glass-bg: 255 255 255 / 0.05;
+    --glass-border: 255 255 255 / 0.1;
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+    --gradient-primary: linear-gradient(135deg, hsl(270 95% 75%), hsl(280 95% 85%));
+    --gradient-secondary: linear-gradient(135deg, hsl(220 30% 12%), hsl(220 30% 18%));
+    --gradient-accent: linear-gradient(135deg, hsl(270 95% 88%), hsl(260 90% 92%));
+    --gradient-dark: linear-gradient(135deg, hsl(220 30% 8%), hsl(220 30% 15%));
+
+    --sidebar-background: 220 30% 5%;
+    --sidebar-foreground: 220 20% 95%;
+    --sidebar-primary: 270 95% 75%;
+    --sidebar-primary-foreground: 220 30% 8%;
+    --sidebar-accent: 220 30% 12%;
+    --sidebar-accent-foreground: 220 20% 95%;
+    --sidebar-border: 220 30% 18%;
+    --sidebar-ring: 270 95% 75%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    background: linear-gradient(135deg, hsl(220 20% 98%) 0%, hsl(220 30% 95%) 100%);
+  }
+
+  /* Glassmorphism utilities */
+  .glass {
+    background: rgba(var(--glass-bg));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(var(--glass-border));
+    box-shadow: var(--glass-shadow);
+  }
+
+  .glass-card {
+    @apply glass rounded-xl border border-white/20;
+  }
+
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground));
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary));
+  }
+}
