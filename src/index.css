@@ -1,0 +1,299 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Megha Exports Design System - Modern Indian Fashion Theme */
+
+@layer base {
+  :root {
+    /* Brand Colors - Elegant Indian Fashion Palette */
+    --background: 250 100% 98%;
+    --foreground: 345 10% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 345 10% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 345 10% 15%;
+
+    /* Primary - Elegant Teal inspired by traditional Indian fabrics */
+    --primary: 175 60% 23%;
+    --primary-foreground: 0 0% 98%;
+    --primary-light: 175 45% 40%;
+    --primary-dark: 175 70% 15%;
+
+    /* Secondary - Gold accent for luxury feel */
+    --secondary: 45 90% 60%;
+    --secondary-foreground: 345 10% 15%;
+    --secondary-light: 45 85% 75%;
+
+    /* Accent - Rose gold for modern touch */
+    --accent: 25 75% 65%;
+    --accent-foreground: 0 0% 98%;
+
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 175 60% 23%;
+
+    --radius: 0.75rem;
+
+    /* Gradients for modern appeal */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-light)));
+    --gradient-secondary: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--secondary-light)));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--primary) / 0.9), hsl(var(--primary-dark) / 0.8));
+    --gradient-elegant: linear-gradient(180deg, hsl(var(--background)), hsl(var(--muted)));
+    --gradient-text: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-dark)));
+
+    /* Shadows */
+    --shadow-elegant: 0 10px 30px -5px hsl(var(--primary) / 0.2);
+    --shadow-soft: 0 4px 20px -2px hsl(var(--foreground) / 0.1);
+    --shadow-glow: 0 0 40px hsl(var(--secondary) / 0.3);
+
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 345 15% 8%;
+    --foreground: 25 30% 92%;
+
+    --card: 345 20% 12%;
+    --card-foreground: 25 30% 92%;
+
+    --popover: 345 20% 12%;
+    --popover-foreground: 25 30% 92%;
+
+    --primary: 175 50% 35%;
+    --primary-foreground: 0 0% 98%;
+    --primary-light: 175 40% 50%;
+    --primary-dark: 175 60% 20%;
+
+    --secondary: 45 80% 65%;
+    --secondary-foreground: 345 15% 8%;
+    --secondary-light: 45 70% 80%;
+
+    --accent: 25 65% 70%;
+    --accent-foreground: 345 15% 8%;
+
+    --muted: 345 10% 15%;
+    --muted-foreground: 25 15% 65%;
+
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 345 15% 20%;
+    --input: 345 15% 20%;
+    --ring: 175 50% 35%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-light)));
+    --gradient-secondary: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--secondary-light)));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--primary) / 0.9), hsl(var(--primary-dark) / 0.8));
+    --gradient-elegant: linear-gradient(180deg, hsl(var(--background)), hsl(var(--muted)));
+    --gradient-text: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-dark)));
+
+    --shadow-elegant: 0 10px 30px -5px hsl(var(--primary) / 0.3);
+    --shadow-soft: 0 4px 20px -2px hsl(var(--foreground) / 0.1);
+    --shadow-glow: 0 0 40px hsl(var(--secondary) / 0.2);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "kern" 1, "liga" 1;
+    line-height: 1.2;
+  }
+}
+
+@layer components {
+  /* Navigation */
+  .nav-fixed {
+    @apply fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border shadow-sm;
+    transition: var(--transition-smooth);
+  }
+
+  /* Hero Section */
+  .hero-gradient {
+    background: var(--gradient-hero);
+  }
+
+  .hero-overlay {
+    @apply absolute inset-0 bg-gradient-to-r from-primary/80 via-primary/60 to-transparent;
+  }
+
+  /* Slider */
+  .slider-container {
+    @apply relative overflow-hidden rounded-xl;
+  }
+
+  .slider-slide {
+    @apply relative min-w-full h-96 md:h-[500px] bg-cover bg-center bg-no-repeat;
+    transition: var(--transition-smooth);
+  }
+
+  /* Product Cards */
+  .product-card {
+    @apply bg-card rounded-xl border border-border p-4 shadow-sm hover:shadow-elegant transition-all duration-300 hover:-translate-y-1;
+  }
+
+  .category-card {
+    @apply relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/5 to-secondary/5 border border-border hover:border-primary/30 transition-all duration-300 hover:shadow-elegant;
+  }
+
+  .category-card h3,
+  .product-card h3 {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "kern" 1, "liga" 1;
+    line-height: 1.3;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    @apply bg-primary hover:bg-primary-dark text-primary-foreground px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:shadow-elegant hover:-translate-y-0.5;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary hover:bg-secondary-light text-secondary-foreground px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:shadow-soft;
+  }
+
+  .btn-outline {
+    @apply border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground px-6 py-3 rounded-lg font-medium transition-all duration-300;
+  }
+
+  /* Text Effects */
+  .text-gradient {
+    background: var(--gradient-text);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "kern" 1, "liga" 1;
+    filter: contrast(1.2);
+  }
+
+  .section-title {
+    @apply text-3xl md:text-4xl font-bold text-center mb-12 text-gradient leading-tight;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "kern" 1, "liga" 1;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    padding: 0.5rem 0;
+    overflow: visible;
+  }
+
+  /* Animations */
+  .fade-in-up {
+    @apply opacity-0 translate-y-8;
+    animation: fadeInUp 0.6s ease-out forwards;
+  }
+
+  .hover-scale {
+    @apply transition-transform duration-300 hover:scale-105;
+  }
+
+  .hover-glow {
+    @apply transition-all duration-300 hover:shadow-glow;
+  }
+
+  /* Expandable Search Bar */
+  .search-expandable {
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .search-expandable:focus-within {
+    transform: scale(1.02);
+    box-shadow: var(--shadow-elegant);
+  }
+
+  /* Full Width Search Animation */
+  .search-full-width {
+    animation: searchExpand 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+
+  /* Full Width Search Styles */
+  .search-expandable.expanded {
+    width: 100% !important;
+    max-width: none !important;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  /* Adjust search icon position when expanded */
+  .search-expandable.expanded .search-icon {
+    left: 2rem !important;
+    transition: left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  /* Smooth opacity transitions for other elements */
+  .search-expandable + *,
+  .search-expandable ~ * {
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  @keyframes searchExpand {
+    from {
+      width: 12rem;
+      opacity: 0.8;
+    }
+    to {
+      width: 100%;
+      opacity: 1;
+    }
+  }
+}
+
+@keyframes fadeInUp {
+  to {
+    @apply opacity-100 translate-y-0;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    @apply opacity-0 translate-x-10;
+  }
+  to {
+    @apply opacity-100 translate-x-0;
+  }
+}

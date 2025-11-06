@@ -1,0 +1,26 @@
+npm outdated
+npm install react-native@latest
+npm install react-native-screens@latest
+npm install react-native-gesture-handler@latest
+npm install react-native-splash-screen@latest
+npm install @react-navigation/native@latest
+npm install expo@latest
+Then rebuild your Android app.
+
+💡 The React Native team and React Native Screens (Software Mansion) fixed this in their September–October 2025 updates.
+
+2. Add proper edge-to-edge handling
+Open your MainActivity.kt or MainActivity.java and replace old status bar code with:
+
+kotlin
+Copy code
+import androidx.activity.EdgeToEdge
+import androidx.core.view.WindowCompat
+
+class MainActivity : ReactActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        EdgeToEdge.enable(this)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+    }
+}  importantttt 
