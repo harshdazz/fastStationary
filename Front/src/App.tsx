@@ -19,13 +19,13 @@ import ScrollToTop from "./components/ScrollToTop";
 import Checkout from "./pages/Checkout";  // ✅ changed from PayPalCheckout
 import AllProductsPage from "./pages/Allproducts";
 import MyOrders from "./pages/Myorder";
-import TrackOrder from "./pages/TrackOrder";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ShippingPolicy from "./pages/ShippingPolicy";
 import RefundPolicy from "./pages/RefundPolicy";
 import { ProductProvider } from "./contexts/ProductContext";
 import { ToastProvider } from "./components/ui/toast";
+import PaymentStatus from "./pages/paymentStatus";
 
 const queryClient = new QueryClient();
 
@@ -52,12 +52,12 @@ const App = () => (
                       <Route path="/checkout" element={<Checkout />} /> {/* ✅ new PhonePe checkout */}
                       <Route path="/product" element={<AllProductsPage />} />
                       <Route path="/orders" element={<MyOrders />} />
-                      <Route path="/track-order" element={<TrackOrder />} />
                       <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
                       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                       <Route path="/shipping-policy" element={<ShippingPolicy />} />
                       <Route path="/refund-policy" element={<RefundPolicy />} />
                       <Route path="/product/:id" element={<ProductPage />} />
+                      <Route path="/payment-status" element={<PaymentStatus />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </BrowserRouter>

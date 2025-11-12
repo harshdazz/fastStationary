@@ -8,9 +8,10 @@ const HeroSlider = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   // Use Firebase banners if available, otherwise use the local banner
-  const banners = webflowData?.banner && webflowData.banner.length > 0 
-    ? webflowData.banner 
-    : ['/banner.png'];
+  const banners =
+    webflowData?.banner && webflowData.banner.length > 0
+      ? webflowData.banner
+      : ["/banner.png"];
   const isMultiple = banners.length > 1;
 
   // Auto-slide only if multiple banners
@@ -33,7 +34,7 @@ const HeroSlider = () => {
   if (webflowLoading) return null;
 
   return (
-   <section className="relative h-[70vh] overflow-hidden">
+    <section className="relative w-full h-[45vh] sm:h-[55vh] md:h-[70vh] lg:h-[80vh] overflow-hidden">
       {/* Slides */}
       <div className="relative w-full h-full">
         {banners.map((img, index) => (
@@ -44,20 +45,29 @@ const HeroSlider = () => {
             }`}
           >
             <div
-              className="w-full h-full bg-cover bg-center bg-no-repeat"
+              className="
+                w-full h-full 
+                bg-center bg-no-repeat 
+                bg-contain sm:bg-cover
+                transition-all duration-500
+              "
               style={{ backgroundImage: `url(${img})` }}
             />
           </div>
         ))}
       </div>
 
-      {/* Content */}
+      {/* Optional Overlay (soft dark tint) */}
+      <div className="absolute inset-0 bg-black/20" />
+
+      {/* Centered Content */}
       <div className="absolute inset-0 flex items-center justify-center text-center text-white">
         <div className="max-w-4xl mx-auto px-4 fade-in-up">
+          {/* If you ever want text or buttons here, you can add them */}
         </div>
       </div>
 
-      {/* Arrows and indicators only if multiple */}
+      {/* Arrows + Dots */}
       {isMultiple && (
         <>
           <Button
@@ -76,7 +86,7 @@ const HeroSlider = () => {
           >
             <ChevronRight className="w-6 h-6" />
           </Button>
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2">
+          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2">
             {banners.map((_, index) => (
               <button
                 key={index}

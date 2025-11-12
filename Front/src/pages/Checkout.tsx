@@ -1,51 +1,68 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCart } from "@/contexts/CartContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { db } from "@/lib/firebase";
+import { setDoc, doc, serverTimestamp } from "firebase/firestore";
 
 const Checkout = () => {
   const { cartItems, clearCart } = useCart();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const { user, userData } = useAuth();
 
-  // User form state
+  // User form state (with address)
   const [userDetails, setUserDetails] = useState({
     name: "",
     email: "",
     phone: "",
+    address: "",
   });
 
-  const totalAmount = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  useEffect(() => {
+    if (userData) {
+      setUserDetails((prev) => ({ ...prev, ...userData }));
+    }
+  }, [userData]);
 
-  // IMPORTANT: Replace this with your actual Firebase Function URL after deployment
-  const FIREBASE_FUNCTION_URL = "http://127.0.0.1:5001/fir-admin-d1ae6/us-central1/api";
+  const totalAmount = cartItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
 
+  // ✅ Local Emulator URL — change project ID if needed
+  const FIREBASE_FUNCTION_URL =
+    "http://127.0.0.1:5001/fir-admin-d1ae6/us-central1/api";
   const handlePayment = async () => {
-    // Validation
     if (cartItems.length === 0) {
-      toast({ 
-        title: "Cart is empty", 
+      toast({
+        title: "Cart is empty",
         description: "Add some items before checkout.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
 
-    if (!userDetails.name || !userDetails.email || !userDetails.phone) {
-      toast({ 
-        title: "Missing details", 
+    if (
+      !userDetails.name ||
+      !userDetails.email ||
+      !userDetails.phone ||
+      !userDetails.address
+    ) {
+      toast({
+        title: "Missing details",
         description: "Please fill in all your details.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
 
-    // Validate phone number (10 digits)
     if (!/^\d{10}$/.test(userDetails.phone)) {
-      toast({ 
-        title: "Invalid phone", 
+      toast({
+        title: "Invalid phone",
         description: "Please enter a valid 10-digit phone number.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -54,35 +71,41 @@ const Checkout = () => {
 
     try {
       const orderId = `ORD_${Date.now()}`;
-      
-      // Store order in localStorage temporarily (you can also store in Firebase)
-      const orderData = {
-        orderId,
-        items: cartItems,
-        totalAmount,
-        userDetails,
-        createdAt: new Date().toISOString(),
-        status: "PENDING"
-      };
-      localStorage.setItem(`order_${orderId}`, JSON.stringify(orderData));
 
+      // ✅ Save order to Firestore (so admin sees it)
+      const orderRef = doc(db, "orders", orderId);
+      const orderPayload = {
+        amount: totalAmount,
+        items: cartItems,
+        name: userDetails.name,
+        email: userDetails.email,
+        phone: userDetails.phone,
+        address: userDetails.address,
+        userId: user?.uid || `ANON_${Date.now()}`,
+        status: "pending",
+        createdAt: serverTimestamp(),
+        paymentStatus: "unpaid",
+        orderId,
+      };
+
+      await setDoc(orderRef, orderPayload);
+
+      // ✅ Call Firebase Function (local or deployed)
       const body = {
-        amount: totalAmount, // Send in rupees, backend converts to paise
-        orderId: orderId,
-        userId: `USER_${Date.now()}`, // In production, use actual user ID from auth
+        amount: totalAmount,
+        orderId,
+        userId: user?.uid || orderPayload.userId,
         userPhone: userDetails.phone,
         userName: userDetails.name,
         userEmail: userDetails.email,
-        redirectUrl: `${window.location.origin}/payment-status?orderId=${orderId}`
+        redirectUrl: `${window.location.origin}/payment-status?orderId=${orderId}`,
       };
 
-      console.log("Payment Request:", body);
+      console.log("Payment Request Body:", body);
 
       const response = await fetch(`${FIREBASE_FUNCTION_URL}/createPayment`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
 
@@ -95,26 +118,30 @@ const Checkout = () => {
           description: "Please complete your payment on the PhonePe page.",
         });
 
-        // Clear cart before redirecting
         clearCart();
 
-        // Redirect to PhonePe payment page
         setTimeout(() => {
           window.location.href = data.paymentUrl;
         }, 1000);
       } else {
+        await setDoc(
+          orderRef,
+          { paymentStatus: "failed", status: "pending" },
+          { merge: true }
+        );
+
         toast({
           title: "Payment Initiation Failed",
-          description: data.message || "Something went wrong. Please try again.",
-          variant: "destructive"
+          description: data?.message || "Something went wrong. Please try again.",
+          variant: "destructive",
         });
       }
     } catch (err) {
-      console.error("Payment Error:", err);
+      console.error("Payment/Error saving order:", err);
       toast({
         title: "Error",
-        description: "Unable to connect to the payment server. Please check your internet connection.",
-        variant: "destructive"
+        description: "Unable to process order or connect to payment server.",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -149,10 +176,10 @@ const Checkout = () => {
         )}
       </div>
 
-      {/* User Details Form */}
+      {/* User Details */}
       <div className="border rounded-lg p-6 mb-6 bg-white shadow-sm">
         <h2 className="text-xl font-semibold mb-4">Your Details</h2>
-        
+
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-2">Full Name *</label>
@@ -183,13 +210,27 @@ const Checkout = () => {
             <input
               type="tel"
               value={userDetails.phone}
-              onChange={(e) => setUserDetails({ ...userDetails, phone: e.target.value.replace(/\D/g, '') })}
+              onChange={(e) =>
+                setUserDetails({ ...userDetails, phone: e.target.value.replace(/\D/g, "") })
+              }
               placeholder="9999999999"
               maxLength={10}
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               required
             />
             <p className="text-xs text-gray-500 mt-1">10 digit mobile number</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Address *</label>
+            <textarea
+              value={userDetails.address}
+              onChange={(e) => setUserDetails({ ...userDetails, address: e.target.value })}
+              placeholder="House number, street, city, state, pincode"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              rows={3}
+              required
+            />
           </div>
         </div>
       </div>
@@ -202,16 +243,34 @@ const Checkout = () => {
       >
         {loading ? (
           <>
-            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg
+              className="animate-spin h-5 w-5 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
             </svg>
             Processing...
           </>
         ) : (
           <>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+                clipRule="evenodd"
+              />
             </svg>
             Pay ₹{totalAmount} with PhonePe
           </>

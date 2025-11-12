@@ -48,7 +48,7 @@ export function Sidebar() {
       )}>
         <div className="flex h-full flex-col">
           {/* Header */}
-          <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-border">
+          <div className="flex h-20 items-center justify-between px-4 border-b border-sidebar-border">
             {isOpen && (
               <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                 Admin Panel
@@ -81,7 +81,7 @@ export function Sidebar() {
                   )}
                 >
                   <item.icon className={cn(
-                    "h-5 w-5 transition-transform duration-200 group-hover:scale-110",
+                    "h-7 w-7 transition-transform duration-200 group-hover:scale-110",
                     isActive && "text-sidebar-primary-foreground"
                   )} />
                   {isOpen && (

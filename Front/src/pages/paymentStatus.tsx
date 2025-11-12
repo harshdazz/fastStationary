@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
+import Navbar from "@/components/Navbar";
+import { getFirestore, doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
 const PaymentStatus = () => {
   const [searchParams] = useSearchParams();
@@ -15,17 +18,16 @@ const PaymentStatus = () => {
   } | null>(null);
 
   const orderId = searchParams.get("orderId");
-
-  // IMPORTANT: Replace with your Firebase Function URL
-  const FIREBASE_FUNCTION_URL = import.meta.env.VITE_FIREBASE_FUNCTION_URL || 
-    "https://us-central1-your-project.cloudfunctions.net/api";
+  const FIREBASE_FUNCTION_URL = "https://api-ffxb4hjlga-uc.a.run.app/api"; // ✅ corrected prefix
+  const db = getFirestore();
+  const auth = getAuth();
 
   useEffect(() => {
     if (!orderId) {
       toast({
         title: "Invalid Request",
         description: "No order ID found",
-        variant: "destructive"
+        variant: "destructive",
       });
       navigate("/");
       return;
@@ -37,9 +39,7 @@ const PaymentStatus = () => {
   const checkPaymentStatus = async () => {
     try {
       setLoading(true);
-
-      // Wait a bit for callback to process
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       const response = await fetch(`${FIREBASE_FUNCTION_URL}/checkPaymentStatus`, {
         method: "POST",
@@ -55,45 +55,83 @@ const PaymentStatus = () => {
       console.log("Payment Status Response:", data);
 
       if (data.success) {
-        const code = data.data?.code;
-        const responseData = data.data?.data;
+        const responseData = data.data;
+        const state = responseData?.state || responseData?.code;
 
-        if (code === "PAYMENT_SUCCESS") {
-          setPaymentStatus({
-            success: true,
-            message: "Payment Successful!",
-            orderId: orderId!,
-            amount: responseData?.amount ? responseData.amount / 100 : undefined,
-            transactionId: responseData?.transactionId,
-          });
+        switch (state) {
+          case "COMPLETED":
+          case "PAYMENT_SUCCESS": {
+            const amount = responseData?.amount ? responseData.amount / 100 : undefined;
+            const transactionId =
+              responseData?.paymentDetails?.[0]?.transactionId ||
+              responseData?.transactionId;
 
-          toast({
-            title: "Payment Successful!",
-            description: "Your order has been confirmed.",
-          });
-        } else if (code === "PAYMENT_PENDING") {
-          setPaymentStatus({
-            success: false,
-            message: "Payment is pending. Please wait...",
-            orderId: orderId!,
-          });
+            setPaymentStatus({
+              success: true,
+              message: "Payment Successful!",
+              orderId: orderId!,
+              amount,
+              transactionId,
+            });
 
-          // Retry after 3 seconds
-          setTimeout(() => {
-            checkPaymentStatus();
-          }, 3000);
-        } else {
-          setPaymentStatus({
-            success: false,
-            message: "Payment Failed",
-            orderId: orderId!,
-          });
+            toast({
+              title: "Payment Successful!",
+              description: "Your order has been confirmed.",
+            });
 
-          toast({
-            title: "Payment Failed",
-            description: data.data?.message || "Something went wrong",
-            variant: "destructive"
-          });
+            await saveOrderToFirestore(orderId!, amount, transactionId);
+            break;
+          }
+
+          case "PENDING":
+          case "PAYMENT_PENDING":
+            setPaymentStatus({
+              success: false,
+              message: "Payment is pending. Please wait...",
+              orderId: orderId!,
+            });
+            setTimeout(() => checkPaymentStatus(), 3000);
+            break;
+
+          case "FAILED":
+          case "PAYMENT_FAILED":
+            setPaymentStatus({
+              success: false,
+              message: "Payment Failed",
+              orderId: orderId!,
+            });
+            toast({
+              title: "Payment Failed",
+              description: "Transaction failed. Please try again.",
+              variant: "destructive",
+            });
+            break;
+
+          case "CANCELLED":
+          case "USER_CANCELLED":
+            setPaymentStatus({
+              success: false,
+              message: "Payment Cancelled by User",
+              orderId: orderId!,
+            });
+            toast({
+              title: "Payment Cancelled",
+              description: "You cancelled the payment process.",
+              variant: "destructive",
+            });
+            break;
+
+          default:
+            setPaymentStatus({
+              success: false,
+              message: "Unknown payment status",
+              orderId: orderId!,
+            });
+            toast({
+              title: "Payment Status Unknown",
+              description: "Unable to determine payment status.",
+              variant: "destructive",
+            });
         }
       } else {
         setPaymentStatus({
@@ -109,14 +147,40 @@ const PaymentStatus = () => {
         message: "Error verifying payment",
         orderId: orderId!,
       });
-
       toast({
         title: "Error",
         description: "Unable to verify payment status",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ✅ Updated Firestore save: merge updates instead of overwrite
+  const saveOrderToFirestore = async (orderId: string, amount?: number, transactionId?: string) => {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        console.warn("No user logged in. Skipping order update.");
+        return;
+      }
+
+      await setDoc(
+        doc(db, "orders", orderId),
+        {
+          paymentStatus: "paid",
+          status: "fulfilled",
+          transactionId: transactionId || null,
+          amount: amount || 0,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      console.log("✅ Firestore order updated successfully:", orderId);
+    } catch (error) {
+      console.error("❌ Error updating Firestore order:", error);
     }
   };
 
@@ -142,9 +206,9 @@ const PaymentStatus = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
+      <Navbar />
       <div className="max-w-2xl mx-auto">
         {paymentStatus?.success ? (
-          // Success State
           <div className="bg-white rounded-lg shadow-lg p-8 text-center">
             <div className="mb-6">
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -154,20 +218,11 @@ const PaymentStatus = () => {
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h1 className="text-3xl font-bold text-green-600 mb-2">
-                Payment Successful!
-              </h1>
-              <p className="text-gray-600">
-                Thank you for your purchase. Your order has been confirmed.
-              </p>
+              <h1 className="text-3xl font-bold text-green-600 mb-2">Payment Successful!</h1>
+              <p className="text-gray-600">Thank you for your purchase. Your order has been confirmed.</p>
             </div>
 
             <div className="bg-gray-50 rounded-lg p-6 mb-6 text-left">
@@ -198,7 +253,9 @@ const PaymentStatus = () => {
                 <div className="space-y-2">
                   {orderDetails.items.map((item: any) => (
                     <div key={item.id} className="flex justify-between text-sm">
-                      <span>{item.name} x {item.quantity}</span>
+                      <span>
+                        {item.name} x {item.quantity}
+                      </span>
                       <span>₹{item.price * item.quantity}</span>
                     </div>
                   ))}
@@ -222,7 +279,6 @@ const PaymentStatus = () => {
             </div>
           </div>
         ) : (
-          // Failure State
           <div className="bg-white rounded-lg shadow-lg p-8 text-center">
             <div className="mb-6">
               <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -232,47 +288,17 @@ const PaymentStatus = () => {
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </div>
               <h1 className="text-3xl font-bold text-red-600 mb-2">
                 {paymentStatus?.message || "Payment Failed"}
               </h1>
               <p className="text-gray-600">
-                {paymentStatus?.message === "Payment is pending. Please wait..." 
+                {paymentStatus?.message === "Payment is pending. Please wait..."
                   ? "Your payment is being processed. This page will update automatically."
                   : "Unfortunately, your payment could not be processed. Please try again."}
               </p>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-6 mb-6 text-left">
-              <h3 className="font-semibold mb-3">Order Information</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Order ID:</span>
-                  <span className="font-mono font-semibold">{paymentStatus?.orderId}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-4">
-              <button
-                onClick={() => navigate("/checkout")}
-                className="flex-1 bg-indigo-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-indigo-700"
-              >
-                Try Again
-              </button>
-              <button
-                onClick={() => navigate("/")}
-                className="flex-1 bg-gray-200 text-gray-800 py-3 px-6 rounded-lg font-semibold hover:bg-gray-300"
-              >
-                Back to Home
-              </button>
             </div>
           </div>
         )}
